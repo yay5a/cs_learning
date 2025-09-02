@@ -141,7 +141,7 @@ int main(int argc, char *argv[]) {
   printf("Destination IP: %s\n",
          inet_ntoa(*(struct in_addr *)&ip_header.dstip));
 
-  // Switch fread header based on protocol
+  // Switch header read based on protocol
   switch (ip_header.protocol) {
   case 0x01:
     printf("ICMP\n");
@@ -160,29 +160,36 @@ int main(int argc, char *argv[]) {
     }
 
     // Print TCP header data
-    printf("Source port: 0x%x\n ", tcp_header.src_port);
-    printf("Destination port: 0x%x\n", tcp_header.dst_port);
+    printf("Source port: 0x%x\n ", ntohs(tcp_header.src_port));
+    printf("Destination port: 0x%x\n", ntohs(tcp_header.dst_port));
     printf("Sequence number: 0x%x\n", tcp_header.seq_num);
     printf("Acknowledgement number: 0x%x\n", tcp_header.ack_num);
     printf("TCP Header length: 0x%x\n", tcp_header.header_len);
     printf("Urgent pointer: 0x%x\n", tcp_header.urg_pointer);
     printf("TCP options: 0x%x\n", tcp_header.tcp_opts);
-  }
+    break;
+  case 0x11:
+    printf("UDP\n");
+    // Read UDP header
+    struct udp_header udp_header;
+    size_t udp_head_bytes_read =
+        fread(&udp_header, sizeof(udp_header), 1, file);
+    if (udp_head_bytes_read == 0) {
+      printf("Error reading UDP header\n");
+      fclose(file);
+      return 1;
+    }
 
-  // Read UDP header
-  struct udp_header udp_header;
-  size_t udp_head_bytes_read = fread(&udp_header, sizeof(udp_header), 1, file);
-  if (udp_head_bytes_read == 0) {
-    printf("Error reading UDP header\n");
-    fclose(file);
-    return 1;
+    // Print UDP header data
+    printf("Source port: 0x%x\n ", ntohs(udp_header.src_port));
+    printf("Destination port: 0x%x\n", ntohs(udp_header.dst_port));
+    printf("UDP packet length: 0x%x\n", udp_header.length);
+    printf("Checksum: 0x%x\n", udp_header.chksum);
+    break;
+  default:
+    printf("Unexpected protocol: 0x%x\n", ntohs(ip_header.protocol));
+    break;
   }
-
-  // Print UDP header data
-  printf("Source port: 0x%x\n ", udp_header.src_port);
-  printf("Destination port: 0x%x\n", udp_header.dst_port);
-  printf("UDP packet length: 0x%x\n", udp_header.length);
-  printf("Checksum: 0x%x\n", udp_header.chksum);
 
   fclose(file);
   return EXIT_SUCCESS;
