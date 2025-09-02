@@ -11,6 +11,7 @@
 *.pcap
 *.pcapng
 *.txt
+*.md
 
 # Linker output
 *.ilk
