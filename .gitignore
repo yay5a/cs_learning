@@ -10,6 +10,7 @@
 # Supplemental files
 *.pcap
 *.pcapng
+*.txt
 
 # Linker output
 *.ilk
